@@ -10,6 +10,7 @@ import sd2526.trab.api.rest.RestMessages;
 import sd2526.trab.client.UsersClient;
 import sd2526.trab.impl.JavaMessages;
 import static sd2526.trab.server.rest.RestServerUtils.statusCodeToException;
+import static sd2526.trab.server.rest.RestServerUtils.wrapResult;
 
 public class MessageResource implements RestMessages {
 
@@ -36,26 +37,22 @@ public class MessageResource implements RestMessages {
 
     @Override
     public Message getMessage(String name, String mid, String pwd) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getMessage'");
+        return wrapResult(messages.getInboxMessage(name, mid, pwd));
     }
 
     @Override
     public List<String> getMessages(String name, String pwd, String query) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getMessages'");
+        return wrapResult(messages.getAllInboxMessages(name, pwd));
     }
 
     @Override
     public void removeFromUserInbox(String name, String mid, String pwd) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'removeFromUserInbox'");
+        wrapResult(messages.removeInboxMessage(name, mid, pwd));
     }
 
     @Override
     public void deleteMessage(String name, String mid, String pwd) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'deleteMessage'");
+        wrapResult(messages.deleteMessage(name, mid, pwd));
     }
 }
 

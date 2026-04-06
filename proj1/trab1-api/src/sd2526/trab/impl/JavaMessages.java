@@ -12,6 +12,8 @@ public class JavaMessages implements Messages {
 
     private static final Logger log = Logger.getLogger(JavaMessages.class.getName());
 
+    private static final String SERVICE_NAME = "Messages";
+
     private Users users;
 
     public void setUsers(Users users) {
