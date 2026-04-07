@@ -19,7 +19,7 @@ public class ServiceAnnouncer {
 
     // The pre-aggreed multicast endpoint assigned to perform discovery.
     // Allowed IP Multicast range: 224.0.0.1 - 239.255.255.255
-    static final InetSocketAddress DISCOVERY_ADDR = new InetSocketAddress("226.226.226.226", 2262);
+    static final InetSocketAddress DISCOVERY_ADDR = new InetSocketAddress("226.226.226.226", 2266);
     static final String DELIMITER = "\t";
 
     private static final int DISCOVERY_ANNOUNCE_PERIOD = 1000;

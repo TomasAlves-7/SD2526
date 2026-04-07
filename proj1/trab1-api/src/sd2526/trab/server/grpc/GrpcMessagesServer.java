@@ -11,7 +11,7 @@ public class GrpcMessagesServer {
     
     private static final Logger log = Logger.getLogger(GrpcUserServer.class.getName());
 
-    public static final int PORT = 9000;
+    public static final int PORT = 9001;
 
     public static void main(String[] args) {
         launchServer(PORT);

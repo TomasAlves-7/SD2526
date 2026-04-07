@@ -1,15 +1,14 @@
 package sd2526.trab.impl;
 
-import sd2526.trab.api.java.Result;
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
-import org.hibernate.Transaction;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.exception.LockAcquisitionException;
-
 import java.io.File;
 import java.util.List;
+
+import org.hibernate.SessionFactory;
+import org.hibernate.Session;
+import org.hibernate.Transaction;
+import org.hibernate.cfg.Configuration;
 import java.util.function.Function;
+import sd2526.trab.api.java.Result;
 import java.util.logging.Logger;
 
 /**
@@ -178,5 +177,4 @@ public class Hibernate {
 	public static void teardown() {
 		instance = new Hibernate();
 	}
-	
 }

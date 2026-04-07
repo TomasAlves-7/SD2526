@@ -24,6 +24,6 @@ public class ServerUtils {
 
     public static String getServerURI(String protocol, int port, InterfaceType interfaceType) throws UnknownHostException {
         String ip = InetAddress.getLocalHost().getHostAddress();
-        return SERVER_URI_FMT.formatted(interfaceType.getType(), ip, port, interfaceType.getType());
+        return SERVER_URI_FMT.formatted(protocol, ip, port, interfaceType.getType());
     }
 }
