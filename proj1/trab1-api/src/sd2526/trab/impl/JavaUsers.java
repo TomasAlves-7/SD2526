@@ -18,6 +18,8 @@ public class JavaUsers implements Users {
 
     private static final Logger log = Logger.getLogger(JavaUsers.class.getName());
 
+    private static final String SERVER_DOMAIN = "ourorg";
+
     private Messages messages;
 
     private final Hibernate db = Hibernate.getInstance();
@@ -30,16 +32,33 @@ public class JavaUsers implements Users {
     @Override
     public Result<String> postUser(User user) {
         log.info("postUser(user -> %s)\n".formatted(user));
-        if(!inputHasAllFields(user)) {
+
+        if (!inputHasAllFields(user)) {
             return error(BAD_REQUEST);
         }
-        try{
-            db.persist(user);
-        } catch (Exception e) {
-            log.warning(e.getMessage());
-            return error(CONFLICT);
+
+        if (!user.getDomain().equals(SERVER_DOMAIN)) {
+            return error(FORBIDDEN);
         }
-        return Result.ok(user.getName());
+
+        return db.execTransaction(s -> {
+
+            var existingUser = s.get(User.class, user.getName());
+
+            if (existingUser != null) {
+                if (existingUser.getPwd().equals(user.getPwd()) &&
+                    existingUser.getDisplayName().equals(user.getDisplayName()) &&
+                    existingUser.getDomain().equals(user.getDomain())) {
+
+                    return Result.ok(user.getName() + "@" + user.getDomain());
+                } else {
+                    return error(CONFLICT);
+                }
+            }
+
+            s.persist(user);
+            return Result.ok(user.getName() + "@" + user.getDomain());
+        }); 
     }
 
     private boolean inputHasAllFields(User user) {
@@ -57,10 +76,8 @@ public class JavaUsers implements Users {
         if (pwd == null)
             return error(FORBIDDEN);
         var user = db.get(User.class, name);
-        if (user == null)
+        if (user == null || !user.getPwd().equals(pwd))
             return error(NOT_FOUND);
-        if (!user.getPwd().equals(pwd))
-            return error(FORBIDDEN);
         return Result.ok(user);
     }
 
@@ -69,7 +86,7 @@ public class JavaUsers implements Users {
         log.info("updateUser(uid -> %s, pwd -> %s, updatedFields -> %s)\n".formatted(name, pwd, info));
         if (name == null)
             return error(BAD_REQUEST);
-        if (pwd == null)
+        if (pwd == null || info == null)
             return error(FORBIDDEN);
         return db.execTransaction(s -> updateUserTx(name, pwd, info, s));
     }
@@ -90,9 +107,7 @@ public class JavaUsers implements Users {
 
     private static Result<User> getUserInTx(String uid, String pwd, Session s) {
         var user = s.get(User.class, uid);
-        if (user == null)
-            return error(NOT_FOUND);
-        if (!user.getPwd().equals(pwd))
+        if (user == null || !user.getPwd().equals(pwd))
             return error(FORBIDDEN);
         return Result.ok(user);
     }
@@ -103,7 +118,7 @@ public class JavaUsers implements Users {
         log.info("deleteUser(uid -> %s, pwd -> %s)\n".formatted(name, pwd));
         if (name == null)
             return error(BAD_REQUEST);
-        if (pwd == null)
+        if (pwd == null || !db.get(User.class, name).getName().equals(name))
             return error(FORBIDDEN);
         var res = db.execTransaction(s -> deleteUserTx(name, pwd, s));
         if (!res.isOK())
