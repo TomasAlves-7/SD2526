@@ -10,7 +10,7 @@ import sd2526.trab.client.rest.RestMessagesClient;
 
 public class MessageClient implements Messages {
 
-    public static final String SERVICE = "Message";
+    public static final String SERVICE = "Messages";
 
     private final ClientLauncher launcher = new ClientLauncher();
 
