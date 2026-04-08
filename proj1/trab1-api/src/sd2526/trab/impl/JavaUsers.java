@@ -77,7 +77,8 @@ public class JavaUsers implements Users {
             return error(FORBIDDEN);
         var user = db.get(User.class, name);
         if (user == null || !user.getPwd().equals(pwd))
-            return error(NOT_FOUND);
+            return error(FORBIDDEN);
+
         return Result.ok(user);
     }
 
@@ -92,12 +93,17 @@ public class JavaUsers implements Users {
     }
 
     private static Result<User> updateUserTx(String uid, String pwd, User updatedFields, Session s) {
+        //Can't change name (primary key)
+        if (updatedFields.getName() != null && !updatedFields.getName().isEmpty())
+            return error(BAD_REQUEST);
+
         var res = getUserInTx(uid, pwd, s);
         if (!res.isOK())
             return res;
         var user = res.value();
+        /*
         if (updatedFields.getName() != null && !updatedFields.getName().isEmpty())
-            user.setName(updatedFields.getName());
+            user.setName(updatedFields.getName());*/
         if (updatedFields.getPwd() != null && !updatedFields.getPwd().isEmpty())
             user.setPwd(updatedFields.getPwd());
         if (updatedFields.getDisplayName() != null && !updatedFields.getDisplayName().isEmpty())
@@ -116,6 +122,7 @@ public class JavaUsers implements Users {
     public Result<User> deleteUser(String name, String pwd) {
 
         log.info("deleteUser(uid -> %s, pwd -> %s)\n".formatted(name, pwd));
+        /*
         if (name == null)
             return error(BAD_REQUEST);
         if (pwd == null || !db.get(User.class, name).getName().equals(name))
@@ -124,7 +131,12 @@ public class JavaUsers implements Users {
         if (!res.isOK())
             return res;
         var user = res.value();
-        return Result.ok(user);
+        return Result.ok(user);*/
+        if (name == null)
+            return error(BAD_REQUEST);
+        if (pwd == null)
+            return error(FORBIDDEN);
+        return db.execTransaction(s -> deleteUserTx(name, pwd, s));
     }
 
     private static Result<User> deleteUserTx(String uid, String pwd, Session s) {
@@ -145,7 +157,11 @@ public class JavaUsers implements Users {
         if (user == null || !user.getPwd().equals(pwd))
             return error(FORBIDDEN);
         query = query == null ? "" : query;
-        List<User> users = db.sql("SELECT * FROM User u WHERE UPPER(u.displayName) LIKE UPPER('%" + query + "%')", User.class);
+        // Search display name and username
+        List<User> users = db.sql(
+                /*"SELECT * FROM User u WHERE UPPER(u.displayName) LIKE UPPER('%" + query + "%')"*/
+                "SELECT * FROM User u WHERE UPPER(u.displayName) LIKE UPPER('%" + query + "%') " +
+                        "OR UPPER(u.name) LIKE UPPER('%" + query + "%')", User.class);
         return Result.ok(users.stream().map(this::hidePwd).toList());
     }
 

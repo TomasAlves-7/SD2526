@@ -27,9 +27,9 @@ public class ServiceAnnouncer {
     // Used separate the two fields that make up a service announcement.
 
     private final InetSocketAddress addr = DISCOVERY_ADDR;
-    private final String service;
-    private final String uri;
-    private final long period;
+    private final String service;       // service type
+    private final String uri;           // uri of service
+    private final long period;          // anouncement interval
     private final MulticastSocket ms;
 
     public ServiceAnnouncer(String service, String uri) throws IOException {
@@ -41,14 +41,14 @@ public class ServiceAnnouncer {
         this.uri = uri;
         this.period = period;
         this.ms = new MulticastSocket(addr.getPort());
-        new Thread(this::announceService).start();
+        new Thread(this::announceService).start();      // starts thread for announcement
     }
 
     private void announceService() {
         log.info(String.format("Starting Discovery announcements on: %s for: %s -> %s", addr, service, uri));
         byte[] announceBytes = String.format("%s%s%s", service, DELIMITER, uri).getBytes();
         DatagramPacket announcePkt = new DatagramPacket(announceBytes, announceBytes.length, addr);
-        for (;;) {
+        for (;;) {  // loop continuously
             try {
                 ms.send(announcePkt);
                 Thread.sleep(period);
