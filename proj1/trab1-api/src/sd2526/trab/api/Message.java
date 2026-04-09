@@ -1,5 +1,10 @@
 package sd2526.trab.api;
 
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Id;
+
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -7,11 +12,13 @@ import java.util.Set;
 /**
  * Represents a message in the system.
  */
+@Entity
 public class Message {
 
+	@Id
 	private String id;	
 	private String sender;
-	
+	@ElementCollection(fetch = FetchType.EAGER)
 	private Set<String> destination;
 	private long creationTime;
 	private String subject;	

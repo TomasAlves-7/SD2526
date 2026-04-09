@@ -3,11 +3,11 @@
 	<session-factory>
 		<!-- JDBC Database connection settings -->
 		<property name="connection.driver_class">org.hsqldb.jdbcDriver</property>
-		<property name="connection.url">jdbc:hsqldb:file:/tmp/db</property>
+		<property name="connection.url">jdbc:hsqldb:file:/tmp/${db.name}</property>
 		<property name="connection.username">sa</property>
 		<property name="connection.password"></property>
 		<!-- JDBC connection pool settings ... using built-in test pool -->
-		<property name="connection.pool_size">1</property>
+		<property name="connection.pool_size">64</property>
 		<!-- Echo the SQL to stdout -->
 		<property name="show_sql">true</property>
 		<!-- Set the current session context -->

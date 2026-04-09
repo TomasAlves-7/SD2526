@@ -1,6 +1,7 @@
 package sd2526.trab.impl;
 
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.logging.Logger;
 
@@ -60,56 +61,80 @@ public class JavaMessages implements Messages {
         // assign unique id
         msg.setId(UUID.randomUUID().toString());
 
-        // persist message
-        try {
-            db.persist(msg);
-        } catch (Exception e) {
-            log.warning(e.getMessage());
-            // already exists, return its id (idempotent)
-            return Result.ok(msg.getId());
-        }
+        String senderDomain = sender.getDomain();
 
-        // deliver to each local recipient's inbox
-        for (String dest : msg.getDestination()) {
-            String destName = dest.contains("@") ? dest.split("@")[0] : dest;
-            String destDomain = dest.contains("@") ? dest.split("@")[1] : sender.getDomain();
-
-            if (destDomain.equals(sender.getDomain())) {
-                // check recipient exists
-                var destUser = db.get(User.class, destName);
-                if (destUser != null) {
-                    try {
-                        db.persist(new InboxEntry(destName, msg.getId()));
-                    } catch (Exception e) {
-                        log.warning("Failed inbox delivery to " + destName + ": " + e.getMessage());
-                    }
-                }
-                // unknown local user: notification goes here for base requirements
+        return db.execTransaction(s -> {
+            // check if message already exists to ensure idempotency
+            if (s.get(Message.class, msg.getId()) == null) {
+                s.persist(msg);
             }
-            // remote domain: forwarding goes here for base requirements
-        }
 
-        return Result.ok(msg.getId());
+            for (String dest : msg.getDestination()) {
+                String[] parts = dest.split("@");
+                String destName = parts[0];
+                String destDomain = (parts.length > 1) ? parts[1] : senderDomain;
+
+                // local delivery
+                if (destDomain.equals(senderDomain)) {
+                    // check if local user exists
+                    if (s.get(User.class, destName) != null) {
+                        String entryId = destName + "_" + msg.getId();
+
+                        // only persist if the InboxEntry doesn't already exist
+                        if (s.get(InboxEntry.class, entryId) == null) {
+                            s.persist(new InboxEntry(destName, msg.getId()));
+                        }
+                    }else sendErrorNotification(s, msg, destName, destDomain);
+                }
+                // TODO: Handle remote domains
+            }
+            return Result.ok(msg.getId());
+        });
+
+    }
+
+
+    private void sendErrorNotification(Session s, Message original, String failedUser, String unknownUser) {
+        Message notification = new Message(
+                original.getId() + "." + failedUser.split("@")[0],                         // id = mid.user
+                original.getSender(),                                                               // not specified, staying the same
+                original.getSender(),                                                               // not specified, but notification is destined to sender
+                ("FAILED TO SEND " + original.getId() + " TO " + failedUser + ": " + unknownUser),  // notification subject format
+                original.getContents());                                                            // original content
+
+        s.persist(notification);                                       // persist notification(message) to db
+        String senderName = original.getSender().split("@")[0];
+        s.persist(new InboxEntry(senderName, notification.getId()));   // persist new inbox entry for original sender
     }
 
     @Override
     public Result<Message> getInboxMessage(String name, String mid, String pwd) {
         log.info("getInboxMessage(name -> %s, mid -> %s, pwd -> %s)\n".formatted(name, mid, pwd));
 
-        if (!isValidInboxRequest(name, mid, pwd))
+        if (!isValidInboxRequest(name, mid, pwd)) {
+            log.warning("Invalid inbox request parameters for: " + name);
             return error(BAD_REQUEST);
+        }
 
         var userResult = users.getUser(name, pwd);
-        if (!userResult.isOK())
+        if (!userResult.isOK()){
+            log.warning("User not found: " + name+" - Status: "+ userResult.error());
             return error(FORBIDDEN);
+        }
 
+        log.info("Finding InboxEntry for: " + name + " message id: "+mid);
         var entry = db.get(InboxEntry.class, name + "_" + mid);
-        if (entry == null)
+        if (entry == null){
+            log.severe("FAIL: InboxEntry not found: " + name+" msgId: "+mid);
             return error(NOT_FOUND);
+        }
 
+        log.info("Found InboxEntry, fetching message content for message id: " + mid);
         var msg = db.get(Message.class, mid);
-        if (msg == null)
+        if (msg == null){
+            log.severe("FAIL: Inbox entry exists, but message content is missing for: "+mid);
             return error(NOT_FOUND);
+        }
 
         return Result.ok(msg);
     }

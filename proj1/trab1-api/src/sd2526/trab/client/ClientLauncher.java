@@ -23,7 +23,9 @@ public class ClientLauncher {
         } catch (UnknownHostException e){
             domain = "ourorg"; //fallback
         }
+        log.info("Looking up serveice: "+service+" in domain: "+domain);
         var serverUri = listener.knownUrisOf(service, domain, 1)[0];
+        log.info("Found service URI: "+ serverUri);
 
         var uriComponents = serverUri.getPath().split("/");
         var commType = uriComponents[uriComponents.length - 1];

@@ -100,11 +100,13 @@ public class Discovery {
     public URI[] knownUrisOf(String serviceName, String domain, int minReplies) {
         synchronized (this) {
             while(true) {
-                var uris = this.announcements.get(serviceName);
+                String fullKey = serviceName + "@" + domain;
+                var uris = this.announcements.get(fullKey);
                 if(uris != null && uris.size() >= minReplies) {
                     return uris.toArray(new URI[0]);
                 }
                 try {
+                    log.info("Looking for key: " + fullKey + " in announcements: " + this.announcements.keySet());
                     this.wait();
                 } catch (InterruptedException ignored) {}
             }

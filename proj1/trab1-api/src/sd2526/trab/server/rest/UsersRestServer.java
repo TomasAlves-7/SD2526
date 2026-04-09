@@ -18,6 +18,7 @@ public class UsersRestServer {
     public static final int PORT = 8080;
 
     public static void main(String[] args) {
+        System.setProperty("db.name", "users_db");
         launchServer(PORT);
     }
 

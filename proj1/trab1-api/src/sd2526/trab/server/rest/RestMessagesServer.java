@@ -18,6 +18,7 @@ public class RestMessagesServer {
     public static final int PORT = 8081;
 
     public static void main(String[] args) {
+        System.setProperty("db.name", "messages_db");
         launchServer(PORT);
     }
 
