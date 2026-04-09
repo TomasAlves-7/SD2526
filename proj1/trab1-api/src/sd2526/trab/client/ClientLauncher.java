@@ -1,6 +1,8 @@
 package sd2526.trab.client;
 
+import java.net.InetAddress;
 import java.net.URI;
+import java.net.UnknownHostException;
 import java.util.function.Function;
 import java.util.logging.Logger;
 
@@ -14,7 +16,15 @@ public class ClientLauncher {
     private final Discovery listener = Discovery.getInstance();
 
     <T> T launch(String service, Function<URI, T> restLauncher, Function<URI, T> grpcLauncher) {
-        var serverUri = listener.knownUrisOf(service, 1)[0];
+        String domain;
+        try{
+            String hostname = InetAddress.getLocalHost().getHostName();
+            domain = hostname.substring(hostname.indexOf('.') + 1);
+        } catch (UnknownHostException e){
+            domain = "ourorg"; //fallback
+        }
+        var serverUri = listener.knownUrisOf(service, domain, 1)[0];
+
         var uriComponents = serverUri.getPath().split("/");
         var commType = uriComponents[uriComponents.length - 1];
         if (commType.equals(ServerUtils.InterfaceType.REST.getType())) {

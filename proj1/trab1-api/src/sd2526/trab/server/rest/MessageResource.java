@@ -25,14 +25,16 @@ public class MessageResource implements RestMessages {
 
     @Override
     public String postMessage(String pwd, Message msg) {
+        /*
         var res = messages.postMessage(pwd, msg);
         if (!res.isOK()) {
             throw statusCodeToException(res.error());
         }
-        var relativeURI = res.value();
+        var relativeURI = res.value();      // message id
         var baseURI = uri.getBaseUri();
         var uri = UriBuilder.fromUri(baseURI).path(RestMessages.PATH).path(relativeURI).build();
-        return uri.toASCIIString();
+        return uri.toASCIIString();*/
+        return wrapResult(messages.postMessage(pwd, msg));
     }
 
     @Override

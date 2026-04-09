@@ -97,7 +97,7 @@ public class Discovery {
      * @return an array of URI with the service instances discovered.
      *
      */
-    public URI[] knownUrisOf(String serviceName, int minReplies) {
+    public URI[] knownUrisOf(String serviceName, String domain, int minReplies) {
         synchronized (this) {
             while(true) {
                 var uris = this.announcements.get(serviceName);

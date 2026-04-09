@@ -25,7 +25,7 @@ public interface RestMessages {
 	final String MBOX = "/mbox";
 
 	@POST
-	@Path("/")
+	//@Path("/") was wrongly change the path, class is already annotated
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	String postMessage(@QueryParam(PWD) String pwd, Message msg);

@@ -1,9 +1,7 @@
 package sd2526.trab.network;
 
 import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.InetSocketAddress;
-import java.net.MulticastSocket;
+import java.net.*;
 import java.util.logging.Logger;
 
 public class ServiceAnnouncer {
@@ -46,7 +44,17 @@ public class ServiceAnnouncer {
 
     private void announceService() {
         log.info(String.format("Starting Discovery announcements on: %s for: %s -> %s", addr, service, uri));
-        byte[] announceBytes = String.format("%s%s%s", service, DELIMITER, uri).getBytes();
+        String domain;
+        // getting the domain with exception handling
+        try{
+            String hostname = InetAddress.getLocalHost().getHostName();
+            domain = hostname.substring(hostname.indexOf('.') + 1);
+        } catch (UnknownHostException e){
+            domain = "ourorg";
+            log.warning("Unable to get local host name, using default domain )"+domain);
+        }
+        // format announcement
+        byte[] announceBytes = String.format("%s@%s%s%s", service, domain, DELIMITER, uri).getBytes();
         DatagramPacket announcePkt = new DatagramPacket(announceBytes, announceBytes.length, addr);
         for (;;) {  // loop continuously
             try {
